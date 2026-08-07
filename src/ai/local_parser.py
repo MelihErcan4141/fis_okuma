@@ -22,70 +22,258 @@ class LocalAIParser:
 
         prompt = f"""
 
-Sen Türkçe ve Kuzey Kıbrıs fişlerini analiz eden bir muhasebe veri çıkarma sistemisin.
+Sen Türkçe ve Kuzey Kıbrıs mali fişlerinden yapılandırılmış veri çıkaran
 
-Aşağıdaki metin OCR ile bir fişten okunmuştur.
+bir muhasebe veri çıkarma sistemisin.
 
-OCR hataları olabilir ama yalnızca metinde gerçekten bulunan bilgilere dayanmalısın.
+Aşağıdaki metin PaddleOCR tarafından bir fişten satır sırası korunarak okunmuştur.
 
-Alanları şu kurallara göre çıkar:
+YALNIZCA OCR metninde bulunan bilgilere dayan.
 
-- company:
+Tahmin etme, yeni bilgi üretme ve firma adını düzeltmeye çalışma.
 
-  Genellikle fişin ilk satırlarında bulunan firma/işletme adıdır.
+ÇIKARILACAK ALANLAR:
 
-  LTD, AŞ, ŞTİ, MARKET, PETROL gibi ifadeler içerebilir.
+1. company
 
-- receipt_no:
+- Fişi düzenleyen işletmenin/firmanın adıdır.
 
-  "FIS NO", "FİŞ NO", "FISNO" gibi ifadelerin yanında bulunan numaradır.
+- Genellikle ilk satırlardadır.
 
-- date:
+- OCR metninde nasıl yazıyorsa mümkün olduğunca aynen kullan.
 
-  GG-AA-YYYY, GG/AA/YYYY veya GG.AA.YYYY formatındaki işlem tarihidir.
+- Firma adını tercüme etme, yeniden yazma veya tamamlamaya çalışma.
 
-- time:
+2. receipt_no
 
-  "SAAT" kelimesinin yanında bulunan HH:MM biçimindeki saattir.
+- YALNIZCA fiş numarasını çıkar.
 
-- kdv:
+- Fiş numarası için öncelikle şu etiketleri ara:
 
-  "KDV" kelimesine en yakın toplam vergi tutarıdır.
+  "FIS NO"
 
-  Ürün satırlarındaki yüzde değerlerini (%00, %05 vb.) KDV tutarı sanma.
+  "FİŞ NO"
 
-  KDV satırındaki para tutarını kullan.
+  "Fis No"
 
-- total:
+  "FISNO"
 
-  "TOPLAM", "TOP", "NAKIT", "NAKİT" gibi ödeme/toplam ifadelerine yakın olan
+- Bu etiketin yanında bulunan numarayı kullan.
 
-  müşterinin ödediği nihai tutardır.
+- Baştaki sıfırları koru.
 
-Kurallar:
-- Firma adını tercüme etme, yeniden yazma veya anlamını değiştirme.
+ÇOK ÖNEMLİ:
 
-  OCR metnindeki firma adını mümkün olduğunca aynen kullan.
+- "V.NO", "V NO", "VERGI NO", "VERGİ NO", "V.D.", "VD"
 
-- "TOPKDV", "TOP KDV" veya "TOPLAM KDV" ifadelerine yakın tutar
+  ifadelerinin yanında bulunan numaralar VERGİ NUMARASIDIR.
 
-  toplam KDV tutarıdır.
+- Vergi numarasını receipt_no olarak ASLA kullanma.
 
-- "TOPLAM", "GENEL TOPLAM" gibi ifadelerin yanındaki tutar
+- Etiketsiz uzun numaraları receipt_no olarak kullanma.
 
-  müşterinin ödediği nihai toplamdır.
+Örnek:
 
-- KDV ile toplam tutarı birbirine karıştırma.
+OCR:
 
-- Tahmin etme.
+GIRNE V.D. V.NO : M$15509
+
+00000015509
+
+FIS NO: 0269
+
+Doğru:
+
+receipt_no = "0269"
+
+Yanlış:
+
+receipt_no = "00000015509"
+3. date
+
+- İşlem tarihidir.
+
+- GG-AA-YYYY, GG/AA/YYYY veya GG.AA.YYYY formatında olabilir.
+
+- OCR'daki mevcut formatı koru.
+
+4. time
+
+- "SAAT" veya "Saat" ifadesinin yanındaki işlem saatidir.
+
+- Çıktıyı HH:MM formatında döndür.
+
+- Örnek:
+
+  "SAAT 18:17" -> "18:17"
+
+  "SAAT : 19:03:24" -> "19:03"
+
+5. total
+
+TOPLAM DEĞERİNİ KDV'DEN ÖNCE BELİRLE.
+
+- Nihai toplam, müşterinin ödediği toplam tutardır.
+
+- Öncelikli etiketler:
+
+  "TOPLAM"
+
+  "GENEL TOPLAM"
+
+  "TOP"
+
+  "ÖDENECEK"
+
+  "ÖDENECEK TUTAR"
+
+- Etiketin hemen öncesindeki veya hemen sonrasındaki para tutarına bak.
+
+- Ödeme yöntemi satırlarının yanındaki aynı tutar da toplamı doğrulayabilir:
+
+  "NAKIT"
+
+  "NAKİT"
+
+  "KREDI KARTI"
+
+  "KREDİ KARTI"
+
+- "ARATOPLAM" nihai toplam değildir.
+
+- Ürün satırlarındaki miktar, birim fiyat veya satır toplamlarını
+
+  genel toplam olarak kullanma.
+
+- Çarpım içeren satırlar ürün bilgisidir:
+
+  "1,850 X 59,99"
+
+  "0,680 X 39,99"
+
+  "2 ADET X 65,00 TL"
+
+  Bunları total olarak kullanma.
+
+6. kdv
+
+TOTAL DEĞERİNİ BELİRLEDİKTEN SONRA KDV'Yİ BUL.
+
+- KDV etiketleri:
+
+  "KDV"
+
+  "TOPKDV"
+
+  "TOP KDV"
+
+  "TOPLAM KDV"
+
+- KDV tutarı genellikle bu etiketin hemen öncesindeki
+
+  veya hemen sonrasındaki para tutarıdır.
+
+- KDV yüzdesini tutar sanma:
+
+  "%00", "%05", "%10", "%20" gibi değerler KDV tutarı değildir.
+
+- KDV tutarı total değerinden küçük olmalıdır.
+
+- Bir KDV etiketinin iki yanında iki para tutarı varsa ve bunlardan biri
+
+  daha önce belirlenen total değerine eşitse, total değerine eşit olmayan
+
+  ve totalden küçük olan tutarı KDV olarak seç.
+
+ÖRNEK:
+
+OCR:
+
+*12,85
+
+KDV
+
+*623,16
+
+*623,16
+
+TOP
+
+NAKIT
+
+Doğru:
+
+kdv = 12.85
+
+total = 623.16
+
+ÖRNEK:
+
+OCR:
+
+*121,84
+
+TOPKDV
+
+*869,99
+
+TOPLAM
+
+*869,99
+
+Doğru:
+
+kdv = 121.84
+
+total = 869.99
+
+ÖRNEK:
+
+OCR:
+
+*1.800,00
+
+KDV
+
+*163,64
+
+TOPLAM
+
+*1.800,00
+
+Doğru:
+
+kdv = 163.64
+
+total = 1800.00
+
+PARA FORMATI KURALLARI:
+
+Türkçe sayı biçimini doğru dönüştür:
+
+"12,85" -> 12.85
+
+"623,16" -> 623.16
+
+"869,99" -> 869.99
+
+"1.800,00" -> 1800.00
+
+Virgülü silerek "12,85" değerini 1285 yapma.
+
+Yıldız, TL ve benzeri sembolleri çıkar.
+
+GÜVENLİK KURALLARI:
+
+- Bilgiyi tahmin etme.
 
 - Bulamadığın alanı null bırak.
 
-- Para tutarlarını float olarak döndür.
+- Aynı değeri sebepsiz şekilde hem KDV hem total olarak kullanma.
 
-- Yıldız, TL, virgül gibi karakterleri temizle.
+- Emin değilsen null döndürmek yanlış bir değer döndürmekten daha iyidir.
 
-- OCR'da "TOPLAM" yerine sadece "TOP" yazılmış olabilir.
+- Sadece istenen yapıdaki alanları döndür.
 
 OCR METNİ:
 

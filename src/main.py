@@ -5,7 +5,7 @@ from parser.receipt_parser import parse_receipt
 
 
 
-image_path = "images/fis2_converted.jpg"
+image_path = "images/fis4.jpeg"
 
 reader = OCRReader()
 

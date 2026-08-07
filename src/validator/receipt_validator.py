@@ -1,5 +1,6 @@
 from enum import Enum
 from models.receipt import Receipt
+import math
 
 MIN_HIGH_CONFIDENCE = 0.95
 
@@ -227,7 +228,20 @@ class ReceiptValidator:
             ai_compare = self._normalize_time(ai_value)
 
         # İki parser aynı şeyi söylüyor.
-        if regex_compare == ai_compare:
+        if (
+            isinstance(regex_compare, (int, float))
+            and isinstance(ai_compare, (int, float))
+        ):
+            values_match = math.isclose(
+                regex_compare,
+                ai_compare,
+                rel_tol=1e-9,
+                abs_tol=0.001
+            )
+        else:
+            values_match = regex_compare == ai_compare
+
+        if values_match:
             return FieldValidation(
                 field_name,
                 regex_value,
