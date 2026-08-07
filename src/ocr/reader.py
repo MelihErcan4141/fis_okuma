@@ -1,5 +1,6 @@
 from paddleocr import PaddleOCR
-
+from models.ocr_line import OCRLine
+from models.ocr_document import OCRDocument
 
 class OCRReader:
     def __init__(self):
@@ -13,9 +14,18 @@ class OCRReader:
     def read(self, image_path):
         results = self.ocr.predict(image_path)
 
-        texts = []
+        lines = []
 
         for result in results:
-            texts.extend(result["rec_texts"])
+            texts = result["rec_texts"]
+            scores = result["rec_scores"]
 
-        return texts
+            for text, score in zip(texts, scores):
+                lines.append(
+                    OCRLine(
+                        text=text,
+                        confidence=float(score)
+                    )
+                )
+
+        return OCRDocument(lines)

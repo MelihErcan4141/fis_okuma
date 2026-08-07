@@ -1,107 +1,236 @@
+from enum import Enum
 from models.receipt import Receipt
 
-
-class ValidationResult:
-    def __init__(self, receipt, warnings):
-        self.receipt = receipt
-        self.warnings = warnings
+MIN_HIGH_CONFIDENCE = 0.95
 
 
-class ReceiptValidator:
-    def validate(self, regex_receipt, ai_receipt):
-        warnings = []
+class ValidationStatus(Enum):
+    VERIFIED = "VERIFIED"
+    NEEDS_REVIEW = "NEEDS_REVIEW"
+    CONFLICT = "CONFLICT"
+    MISSING = "MISSING"
 
-        company = self._choose(
-            "Firma",
-            regex_receipt.company,
-            ai_receipt.company,
-            warnings
-        )
+class ValidationStatus(Enum):
+    VERIFIED = "VERIFIED"
+    VERIFIED_WITH_OCR = "VERIFIED_WITH_OCR"
+    NEEDS_REVIEW = "NEEDS_REVIEW"
+    CONFLICT = "CONFLICT"
+    MISSING = "MISSING"
 
-        receipt_no = self._choose(
-            "Fiş No",
-            regex_receipt.receipt_no,
-            ai_receipt.receipt_no,
-            warnings
-        )
 
-        date = self._choose(
-            "Tarih",
-            regex_receipt.date,
-            ai_receipt.date,
-            warnings,
-            normalize_date=True
-        )
-
-        time = self._choose(
-            "Saat",
-            regex_receipt.time,
-            ai_receipt.time,
-            warnings
-        )
-
-        kdv = self._choose(
-            "KDV",
-            regex_receipt.kdv,
-            ai_receipt.kdv,
-            warnings
-        )
-
-        total = self._choose(
-            "Toplam",
-            regex_receipt.total,
-            ai_receipt.total,
-            warnings
-        )
-
-        final_receipt = Receipt(
-            company=company,
-            receipt_no=receipt_no,
-            date=date,
-            time=time,
-            kdv=kdv,
-            total=total
-        )
-
-        return ValidationResult(final_receipt, warnings)
-
-    def _choose(
+class FieldValidation:
+    def __init__(
         self,
         field_name,
         regex_value,
         ai_value,
-        warnings,
-        normalize_date=False
+        final_value,
+        status,
+        message
     ):
-        if regex_value is None and ai_value is None:
-            warnings.append(
-                f"{field_name}: Her iki parser da değer bulamadı."
+        self.field_name = field_name
+        self.regex_value = regex_value
+        self.ai_value = ai_value
+        self.final_value = final_value
+        self.status = status
+        self.message = message
+
+
+class ValidationResult:
+    def __init__(self, receipt, fields):
+        self.receipt = receipt
+        self.fields = fields
+
+    @property
+    def requires_review(self):
+
+        safe_statuses = {
+
+            ValidationStatus.VERIFIED,
+
+            ValidationStatus.VERIFIED_WITH_OCR
+
+        }
+
+        return any(
+
+            field.status not in safe_statuses
+
+            for field in self.fields
+
+        )
+
+
+class ReceiptValidator:
+
+    def validate(self, regex_receipt, ai_receipt,parsed_fields):
+
+        fields = []
+
+        fields.append(
+            self._validate_field(
+                "Firma",
+                regex_receipt.company,
+                ai_receipt.company,
+                parsed_fields["company"].confidence
             )
-            return None
+        )
 
-        if ai_value is None:
-            return regex_value
+        fields.append(
+            self._validate_field(
+                "Fiş No",
+                regex_receipt.receipt_no,
+                ai_receipt.receipt_no,
+                parsed_fields["receipt_no"].confidence
+            )
+        )
 
+        fields.append(
+            self._validate_field(
+                "Tarih",
+                regex_receipt.date,
+                ai_receipt.date,
+                parsed_fields["date"].confidence,
+                normalize=True
+            )
+        )
+
+        fields.append(
+            self._validate_field(
+                "Saat",
+                regex_receipt.time,
+                ai_receipt.time,
+                parsed_fields["time"].confidence
+            )
+        )
+
+        fields.append(
+            self._validate_field(
+                "KDV",
+                regex_receipt.kdv,
+                ai_receipt.kdv,
+                parsed_fields["kdv"].confidence
+            )
+        )
+
+        fields.append(
+            self._validate_field(
+                "Toplam",
+                regex_receipt.total,
+                ai_receipt.total,
+                parsed_fields["total"].confidence
+            )
+        )
+
+        values = {
+            field.field_name: field.final_value
+            for field in fields
+        }
+
+        receipt = Receipt(
+            company=values["Firma"],
+            receipt_no=values["Fiş No"],
+            date=values["Tarih"],
+            time=values["Saat"],
+            kdv=values["KDV"],
+            total=values["Toplam"]
+        )
+
+        return ValidationResult(receipt, fields)
+
+    def _validate_field(
+        self,
+        field_name,
+        regex_value,
+        ai_value,
+        ocr_confidence,
+        normalize=False
+    ):
+
+        # İkisi de hiçbir şey bulamadı.
+        if regex_value is None and ai_value is None:
+            return FieldValidation(
+                field_name,
+                regex_value,
+                ai_value,
+                None,
+                ValidationStatus.MISSING,
+                "Her iki parser da değer bulamadı."
+            )
+
+        # Regex bulamadı ama AI buldu.
         if regex_value is None:
-            return ai_value
+            return FieldValidation(
+                field_name,
+                regex_value,
+                ai_value,
+                ai_value,
+                ValidationStatus.NEEDS_REVIEW,
+                "Değer yalnızca AI tarafından bulundu."
+            )
+
+        # AI bulamadı ama regex buldu.
+        if ai_value is None:
+
+            if (
+                ocr_confidence is not None
+                and ocr_confidence >= MIN_HIGH_CONFIDENCE
+            ):
+                return FieldValidation(
+                    field_name,
+                    regex_value,
+                    ai_value,
+                    regex_value,
+                    ValidationStatus.VERIFIED_WITH_OCR,
+                    (
+                        "AI değer bulamadı ancak regex sonucu "
+                        f"yüksek OCR güveniyle destekleniyor "
+                        f"({ocr_confidence:.2%})."
+                    )
+                )
+
+            return FieldValidation(
+                field_name,
+                regex_value,
+                ai_value,
+                regex_value,
+                ValidationStatus.NEEDS_REVIEW,
+                (
+                    "Değer yalnızca regex parser tarafından bulundu "
+                    "ve OCR güveni yeterince yüksek değil."
+                )
+            )
 
         regex_compare = regex_value
         ai_compare = ai_value
 
-        if normalize_date:
+        if normalize:
             regex_compare = self._normalize_date(regex_value)
             ai_compare = self._normalize_date(ai_value)
 
+        # İki parser aynı şeyi söylüyor.
         if regex_compare == ai_compare:
-            return regex_value
+            return FieldValidation(
+                field_name,
+                regex_value,
+                ai_value,
+                regex_value,
+                ValidationStatus.VERIFIED,
+                "Regex ve AI sonuçları eşleşiyor."
+            )
 
-        warnings.append(
-            f"{field_name}: Regex={regex_value}, AI={ai_value}"
+        # İki parser farklı şeyler söylüyor.
+        return FieldValidation(
+            field_name,
+            regex_value,
+            ai_value,
+            None,
+            ValidationStatus.CONFLICT,
+            "Regex ve AI sonuçları birbiriyle uyuşmuyor."
         )
 
-        return regex_value
-
     def _normalize_date(self, value):
+
         if value is None:
             return None
 
