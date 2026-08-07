@@ -1,113 +1,32 @@
-from validator.receipt_validator import ReceiptValidator
-from ocr.reader import OCRReader
-from ai.local_parser import LocalAIParser
-from parser.receipt_parser import parse_receipt
-from image.preprocessor import ImagePreprocessor
+from services.receipt_processor import ReceiptProcessor
 
 
+def main():
+    image_path = "images/fis1_converted.jpg"
 
-image_path = "images/fis2.HEIC"
-preprocessor = ImagePreprocessor()
+    processor = ReceiptProcessor()
 
-processed_image_path = preprocessor.prepare(image_path)
+    result = processor.process(image_path)
 
-print("\n--- IMAGE PREPROCESSING ---\n")
-print("Orijinal :", image_path)
-print("OCR için :", processed_image_path)
+    print("\n--- FINAL RECEIPT ---\n")
+    print(result.receipt)
 
-reader = OCRReader()
+    print("\n--- VALIDATION REPORT ---\n")
 
-ocr_document = reader.read(processed_image_path)
+    for field in result.fields:
+            print(f"{field.field_name}:")
+            print(f"  Regex : {field.regex_value}")
+            print(f"  AI    : {field.ai_value}")
+            print(f"  Final : {field.final_value}")
+            print(f"  Status: {field.status.value}")
+            print(f"  Mesaj : {field.message}")
+            print()
 
-print("\n--- HAM OCR METİNLERİ ---\n")
-
-for line in ocr_document.lines:
-    print(f"{line.confidence:.3f} | {line.text}")
-
-receipt, parsed_fields = parse_receipt(ocr_document)
-
-
-print("\n--- REGEX PARSER SONUCU ---\n")
-print(receipt)
-
-
-print("\n--- PARSED FIELD CONFIDENCE ---\n")
-
-for name, field in parsed_fields.items():
-    print(f"{name}:")
-    print(f"  Değer      : {field.value}")
-    print(f"  Kaynak     : {field.source_text}")
-
-    if field.confidence is not None:
-        print(f"  Confidence : {field.confidence:.2%}")
+    if result.requires_review:
+        print("⚠ Bu fişte kullanıcı kontrolü gereken alanlar var.")
     else:
-        print("  Confidence : None")
-
-    print()
-
-ai_parser = LocalAIParser()
-ai_result = ai_parser.parse(ocr_document.texts)
+        print("✅ Tüm alanlar doğrulandı.")
 
 
-
-
-print("\n--- LOCAL AI PARSER SONUCU ---\n")
-print("Firma:", ai_result.company)
-print("Fiş No:", ai_result.receipt_no)
-print("Tarih:", ai_result.date)
-print("Saat:", ai_result.time)
-print("KDV:", ai_result.kdv)
-print("Toplam:", ai_result.total)
-
-validator = ReceiptValidator()
-
-validation_result = validator.validate(
-    receipt,
-    ai_result,
-    parsed_fields
-)
-
-print("\n--- VALIDATION REPORT ---\n")
-
-for field in validation_result.fields:
-
-    print(f"{field.field_name}:")
-
-    print(f"  Regex : {field.regex_value}")
-
-    print(f"  AI    : {field.ai_value}")
-
-    print(f"  Final : {field.final_value}")
-
-    print(f"  Status: {field.status.value}")
-
-    print(f"  Mesaj : {field.message}")
-
-    print()
-
-print("--- FINAL RECEIPT ---\n")
-
-print(validation_result.receipt)
-
-if validation_result.requires_review:
-
-    print(
-
-        "\n⚠ Bu fişte kullanıcı kontrolü gereken alanlar var."
-
-    )
-
-else:
-
-    print(
-
-        "\nTüm alanlar doğrulandı."
-
-    )
-
-print("\nOCR Ortalama Güven:")
-
-print(
-    f"{ocr_document.average_confidence():.2%}"
-)
-
+if __name__ == "__main__":
+    main()
