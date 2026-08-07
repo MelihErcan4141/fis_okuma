@@ -1,0 +1,29 @@
+# Virtual environment
+
+venv/
+
+.venv/
+
+# Python
+
+__pycache__/
+
+*.py[cod]
+
+*.pyo
+
+# macOS
+
+.DS_Store
+
+# VS Code
+
+.vscode/
+
+# Generated output
+
+output/
+
+# Temporary files
+
+*.tmp
