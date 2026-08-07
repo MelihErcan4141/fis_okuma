@@ -42,6 +42,7 @@ ai_result = ai_parser.parse(ocr_document.texts)
 
 
 
+
 print("\n--- LOCAL AI PARSER SONUCU ---\n")
 print("Firma:", ai_result.company)
 print("Fiş No:", ai_result.receipt_no)
