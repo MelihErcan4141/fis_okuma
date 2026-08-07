@@ -2,14 +2,22 @@ from validator.receipt_validator import ReceiptValidator
 from ocr.reader import OCRReader
 from ai.local_parser import LocalAIParser
 from parser.receipt_parser import parse_receipt
+from image.preprocessor import ImagePreprocessor
 
 
 
-image_path = "images/fis4.jpeg"
+image_path = "images/fis2.HEIC"
+preprocessor = ImagePreprocessor()
+
+processed_image_path = preprocessor.prepare(image_path)
+
+print("\n--- IMAGE PREPROCESSING ---\n")
+print("Orijinal :", image_path)
+print("OCR için :", processed_image_path)
 
 reader = OCRReader()
 
-ocr_document = reader.read(image_path)
+ocr_document = reader.read(processed_image_path)
 
 print("\n--- HAM OCR METİNLERİ ---\n")
 
