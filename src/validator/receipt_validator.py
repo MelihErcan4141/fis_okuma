@@ -62,6 +62,18 @@ class ValidationResult:
 
 
 class ReceiptValidator:
+    def _normalize_time(self, value):
+        if value is None:
+            return None
+
+        value = str(value).strip()
+
+        parts = value.split(":")
+
+        if len(parts) >= 2:
+            return f"{parts[0]}:{parts[1]}"
+
+        return value
 
     def validate(self, regex_receipt, ai_receipt,parsed_fields):
 
@@ -100,7 +112,8 @@ class ReceiptValidator:
                 "Saat",
                 regex_receipt.time,
                 ai_receipt.time,
-                parsed_fields["time"].confidence
+                parsed_fields["time"].confidence,
+                normalize_time=True
             )
         )
 
@@ -144,7 +157,8 @@ class ReceiptValidator:
         regex_value,
         ai_value,
         ocr_confidence,
-        normalize=False
+        normalize=False,
+        normalize_time=False
     ):
 
         # İkisi de hiçbir şey bulamadı.
@@ -207,6 +221,10 @@ class ReceiptValidator:
         if normalize:
             regex_compare = self._normalize_date(regex_value)
             ai_compare = self._normalize_date(ai_value)
+
+        if normalize_time:
+            regex_compare = self._normalize_time(regex_value)
+            ai_compare = self._normalize_time(ai_value)
 
         # İki parser aynı şeyi söylüyor.
         if regex_compare == ai_compare:

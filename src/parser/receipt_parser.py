@@ -82,18 +82,26 @@ def find_time(ocr_document):
 def find_kdv(ocr_document):
     lines = ocr_document.lines
 
-    for i, line in enumerate(lines):
-        if line.text.strip().upper() == "KDV":
-            if i > 0:
-                value_line = lines[i - 1]
-                value = clean_amount(value_line.text)
+    kdv_keywords = {
+        "KDV",
+        "TOPKDV",
+        "TOP KDV",
+        "TOPLAM KDV"
+    }
 
-                if value is not None:
-                    return ParsedField(
-                        value=value,
-                        source_text=value_line.text,
-                        confidence=value_line.confidence
-                    )
+    for i, line in enumerate(lines):
+        normalized_text = line.text.strip().upper()
+
+        if normalized_text in kdv_keywords and i > 0:
+            value_line = lines[i - 1]
+            value = clean_amount(value_line.text)
+
+            if value is not None:
+                return ParsedField(
+                    value=value,
+                    source_text=value_line.text,
+                    confidence=value_line.confidence
+                )
 
     return ParsedField()
 
@@ -101,18 +109,27 @@ def find_kdv(ocr_document):
 def find_total(ocr_document):
     lines = ocr_document.lines
 
-    for i, line in enumerate(lines):
-        if line.text.strip().upper().startswith("TOP"):
-            if i > 0:
-                value_line = lines[i - 1]
-                value = clean_amount(value_line.text)
+    total_keywords = {
+        "TOPLAM",
+        "GENEL TOPLAM",
+        "ÖDENECEK",
+        "ÖDENECEK TUTAR",
+        "TOP"
+    }
 
-                if value is not None:
-                    return ParsedField(
-                        value=value,
-                        source_text=value_line.text,
-                        confidence=value_line.confidence
-                    )
+    for i, line in enumerate(lines):
+        normalized_text = line.text.strip().upper()
+
+        if normalized_text in total_keywords and i > 0:
+            value_line = lines[i - 1]
+            value = clean_amount(value_line.text)
+
+            if value is not None:
+                return ParsedField(
+                    value=value,
+                    source_text=value_line.text,
+                    confidence=value_line.confidence
+                )
 
     return ParsedField()
 

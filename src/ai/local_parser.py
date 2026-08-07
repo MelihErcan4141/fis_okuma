@@ -63,6 +63,19 @@ Alanları şu kurallara göre çıkar:
   müşterinin ödediği nihai tutardır.
 
 Kurallar:
+- Firma adını tercüme etme, yeniden yazma veya anlamını değiştirme.
+
+  OCR metnindeki firma adını mümkün olduğunca aynen kullan.
+
+- "TOPKDV", "TOP KDV" veya "TOPLAM KDV" ifadelerine yakın tutar
+
+  toplam KDV tutarıdır.
+
+- "TOPLAM", "GENEL TOPLAM" gibi ifadelerin yanındaki tutar
+
+  müşterinin ödediği nihai toplamdır.
+
+- KDV ile toplam tutarı birbirine karıştırma.
 
 - Tahmin etme.
 
@@ -89,11 +102,18 @@ OCR METNİ:
                 }
             ],
             format=ReceiptAIResult.model_json_schema(),
+            think=False,
             options={
                 "temperature": 0
             }
         )
 
-        return ReceiptAIResult.model_validate_json(
-            response.message.content
-        )
+        content = response.message.content
+
+        if not content or not content.strip():
+              raise RuntimeError(
+                  "Local AI boş cevap döndürdü. "
+                  "Ollama/Qwen3 cevabı üretilemedi."
+              )
+
+        return ReceiptAIResult.model_validate_json(content)
