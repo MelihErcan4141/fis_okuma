@@ -25,7 +25,7 @@ def main():
     if result.requires_review:
         print("⚠ Bu fişte kullanıcı kontrolü gereken alanlar var.")
     else:
-        print("✅ Tüm alanlar doğrulandı.")
+        print(" Tüm alanlar doğrulandı.")
 
 
 if __name__ == "__main__":

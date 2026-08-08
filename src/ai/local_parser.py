@@ -2,6 +2,7 @@ from typing import Optional
 
 from ollama import chat
 from pydantic import BaseModel
+from services.ai_cache import AICache
 
 
 class ReceiptAIResult(BaseModel):
@@ -14,10 +15,34 @@ class ReceiptAIResult(BaseModel):
 
 
 class LocalAIParser:
-    def __init__(self, model_name="qwen3:4b"):
-        self.model_name = model_name
+    PROMPT_VERSION = "v1"
+    def __init__(
+    self,
+    model_name="qwen3:4b"
+    ):
+      self.model_name = model_name
+
+      self.cache = AICache()
+
+      self.cache_hits = 0
+      self.cache_misses = 0
 
     def parse(self, texts):
+        cached_result = self.cache.load(
+            self.model_name,
+            self.PROMPT_VERSION,
+            texts
+        )
+
+        if cached_result is not None:
+            self.cache_hits += 1
+
+            return ReceiptAIResult.model_validate(
+                cached_result
+            )
+
+        self.cache_misses += 1
+
         ocr_text = "\n".join(texts)
 
         prompt = f"""
@@ -329,4 +354,15 @@ OCR METNİ:
                   "Ollama/Qwen3 cevabı üretilemedi."
               )
 
-        return ReceiptAIResult.model_validate_json(content)
+        result = ReceiptAIResult.model_validate_json(
+            content
+        )
+
+        self.cache.save(
+            self.model_name,
+            self.PROMPT_VERSION,
+            texts,
+            result.model_dump()
+        )
+
+        return result

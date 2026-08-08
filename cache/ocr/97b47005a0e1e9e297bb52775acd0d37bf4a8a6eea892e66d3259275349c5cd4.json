@@ -1,0 +1,320 @@
+{
+  "lines": [
+    {
+      "text": "BIM BIRLESIK MAGAZALAR A.S.",
+      "confidence": 0.9743301868438721
+    },
+    {
+      "text": "HARMAN MH.MEZARLIK SK. NO:4",
+      "confidence": 0.9966124296188354
+    },
+    {
+      "text": "TALAS / KAYSERi",
+      "confidence": 0.9802656769752502
+    },
+    {
+      "text": "BÜY0K MÜKELLEFLER V.D 1750051846",
+      "confidence": 0.941403865814209
+    },
+    {
+      "text": "TARIH",
+      "confidence": 0.9617406129837036
+    },
+    {
+      "text": "12.12.2019",
+      "confidence": 0.9999889135360718
+    },
+    {
+      "text": "SAAT",
+      "confidence": 0.9999812245368958
+    },
+    {
+      "text": "17:57",
+      "confidence": 0.9999556541442871
+    },
+    {
+      "text": "FiS NO : 0298",
+      "confidence": 0.9458919167518616
+    },
+    {
+      "text": "PAT.CiPSi PATiTO",
+      "confidence": 0.9692332744598389
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9992054104804993
+    },
+    {
+      "text": "*3,25",
+      "confidence": 0.9987843632698059
+    },
+    {
+      "text": "PAT.CIPSI PATITO",
+      "confidence": 0.9363200068473816
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9994599223136902
+    },
+    {
+      "text": "*3,25",
+      "confidence": 0.9983468055725098
+    },
+    {
+      "text": "SÜT AROMALI",
+      "confidence": 0.9748660922050476
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9972726702690125
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.9992035627365112
+    },
+    {
+      "text": "ETI KARAM GURME 50 G",
+      "confidence": 0.985885500907898
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9987553954124451
+    },
+    {
+      "text": "*1,75",
+      "confidence": 0.9990713000297546
+    },
+    {
+      "text": "ETI KARAM GURME 50 G",
+      "confidence": 0.9982541799545288
+    },
+    {
+      "text": "%08",
+      "confidence": 0.997586727142334
+    },
+    {
+      "text": "*1,75",
+      "confidence": 0.9985753297805786
+    },
+    {
+      "text": "200ML.MUZ.SÜT",
+      "confidence": 0.9648902416229248
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9991207122802734
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.997909426689148
+    },
+    {
+      "text": "SÜT AROMALI",
+      "confidence": 0.9817553162574768
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9992186427116394
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.9987156987190247
+    },
+    {
+      "text": "200ML.MUZ.SÜT",
+      "confidence": 0.9663161635398865
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9995514750480652
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.9975439310073853
+    },
+    {
+      "text": "SÜT AROMALI",
+      "confidence": 0.9822443127632141
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9996208548545837
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.9990514516830444
+    },
+    {
+      "text": "SÜT AROMALI",
+      "confidence": 0.9704840183258057
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9995167851448059
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.9985691905021667
+    },
+    {
+      "text": "KEK",
+      "confidence": 0.9999898076057434
+    },
+    {
+      "text": "35 G KEKSTRA",
+      "confidence": 0.9812013506889343
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9994792938232422
+    },
+    {
+      "text": "*0,70",
+      "confidence": 0.9970932006835938
+    },
+    {
+      "text": "KEK",
+      "confidence": 0.9999886155128479
+    },
+    {
+      "text": "35 G KEKSTRA",
+      "confidence": 0.9999062418937683
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9995036125183105
+    },
+    {
+      "text": "*0,70",
+      "confidence": 0.9953618049621582
+    },
+    {
+      "text": "ALISVERIS POSETi",
+      "confidence": 0.9085544347763062
+    },
+    {
+      "text": "%18",
+      "confidence": 0.9997844099998474
+    },
+    {
+      "text": "*0,25",
+      "confidence": 0.9985259771347046
+    },
+    {
+      "text": "3 X 1,00",
+      "confidence": 0.934460461139679
+    },
+    {
+      "text": "POPKEK MUZLU 60G",
+      "confidence": 0.9989112019538879
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9993758201599121
+    },
+    {
+      "text": "*3,00",
+      "confidence": 0.9997243881225586
+    },
+    {
+      "text": "DANKEK 40 GR",
+      "confidence": 0.9988639950752258
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9992981553077698
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.9989010095596313
+    },
+    {
+      "text": "DANKEK 40 GR",
+      "confidence": 0.9990320205688477
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9992930293083191
+    },
+    {
+      "text": "*1,00",
+      "confidence": 0.9639471173286438
+    },
+    {
+      "text": "2 X 1,75",
+      "confidence": 0.9233385324478149
+    },
+    {
+      "text": "ETI KARAM GURME 50 G",
+      "confidence": 0.9757512211799622
+    },
+    {
+      "text": "%08",
+      "confidence": 0.9995360374450684
+    },
+    {
+      "text": "*3,50",
+      "confidence": 0.9996627569198608
+    },
+    {
+      "text": "TOPKDV",
+      "confidence": 0.9984807968139648
+    },
+    {
+      "text": "*1,96",
+      "confidence": 0.9992822408676147
+    },
+    {
+      "text": "*26,15",
+      "confidence": 0.9998044371604919
+    },
+    {
+      "text": "TOPLAM",
+      "confidence": 0.9999632835388184
+    },
+    {
+      "text": "*26,15",
+      "confidence": 0.9989736676216125
+    },
+    {
+      "text": "KREDi KARTI",
+      "confidence": 0.9479901790618896
+    },
+    {
+      "text": "Banka Kredi Karti",
+      "confidence": 0.9854990839958191
+    },
+    {
+      "text": "Provizyon No : 527212",
+      "confidence": 0.9944048523902893
+    },
+    {
+      "text": "bekleriz.",
+      "confidence": 0.9999885559082031
+    },
+    {
+      "text": "iyi günler, yine",
+      "confidence": 0.9465126991271973
+    },
+    {
+      "text": "A****",
+      "confidence": 0.8850210905075073
+    },
+    {
+      "text": "KASIYER: I****",
+      "confidence": 0.9780029654502869
+    },
+    {
+      "text": "EKU NO:0001",
+      "confidence": 0.9868261814117432
+    },
+    {
+      "text": "Z NO:0802",
+      "confidence": 0.9994766712188721
+    },
+    {
+      "text": "MF YAB 15024061",
+      "confidence": 0.9723949432373047
+    }
+  ]
+}
