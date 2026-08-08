@@ -23,6 +23,10 @@ __pycache__/
 # Generated output
 
 output/
+build/
+dist/
+cache/
+ReceiptReader.spec
 
 # Temporary files
 

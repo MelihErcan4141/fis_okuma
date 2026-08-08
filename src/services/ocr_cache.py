@@ -4,12 +4,17 @@ from pathlib import Path
 
 from models.ocr_document import OCRDocument
 from models.ocr_line import OCRLine
+from services.app_paths import user_cache_dir
 
 
 class OCRCache:
 
-    def __init__(self, cache_dir="cache/ocr"):
-        self.cache_dir = Path(cache_dir)
+    def __init__(self, cache_dir=None):
+        self.cache_dir = (
+            Path(cache_dir)
+            if cache_dir is not None
+            else user_cache_dir() / "ocr"
+        )
 
         self.cache_dir.mkdir(
             parents=True,

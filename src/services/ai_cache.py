@@ -2,15 +2,19 @@ import hashlib
 import json
 from pathlib import Path
 
+from services.app_paths import user_cache_dir
+
 
 class AICache:
 
     def __init__(
         self,
-        cache_dir="cache/ai"
+        cache_dir=None
     ):
-        self.cache_dir = Path(
-            cache_dir
+        self.cache_dir = (
+            Path(cache_dir)
+            if cache_dir is not None
+            else user_cache_dir() / "ai"
         )
 
         self.cache_dir.mkdir(
