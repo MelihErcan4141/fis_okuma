@@ -1070,3 +1070,60 @@ def test_unknown_ai_company_requires_review_when_regex_is_generic():
     )
 
     assert result.requires_review is True
+
+
+
+def test_kdv_with_strong_label_context_is_verified():
+    regex_receipt = Receipt(
+        company="ABC PETROL",
+        receipt_no="0257",
+        date="11-07-2025",
+        time="01:09",
+        kdv=718.29,
+        total=4309.74
+    )
+
+    ai_receipt = Receipt(
+        company="ABC PETROL",
+        receipt_no="0257",
+        date="11-07-2025",
+        time="01:09",
+        kdv=None,
+        total=4309.74
+    )
+
+    parsed_fields = make_parsed_fields(
+        kdv_conf=0.941
+    )
+
+    parsed_fields["kdv"].source_text = (
+        "-718.29"
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        parsed_fields,
+        ocr_texts=[
+            "ABC PETROL",
+            "KDV",
+            "-718.29",
+            "TOPLAM",
+            "4.309,74",
+        ]
+    )
+
+    kdv_field = get_field(
+        result,
+        "KDV"
+    )
+
+    assert (
+        kdv_field.status
+        == ValidationStatus.VERIFIED_WITH_OCR
+    )
+
+    assert kdv_field.final_value == 718.29
+    assert result.requires_review is False

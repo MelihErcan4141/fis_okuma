@@ -150,3 +150,68 @@ def test_long_receipt_number_is_not_truncated():
     receipt, fields = parse_receipt(document)
 
     assert receipt.receipt_no is None
+
+
+
+
+def test_total_with_toplm_ocr_variant():
+    document = OCRDocument(
+        lines=[
+            OCRLine(
+                text="A101 YENI MAGAZACILIK A.S.",
+                confidence=0.99
+            ),
+            OCRLine(
+                text="TOPLM",
+                confidence=0.99
+            ),
+            OCRLine(
+                text="*1.399,00",
+                confidence=0.99
+            ),
+        ]
+    )
+
+    receipt, fields = parse_receipt(
+        document
+    )
+
+    assert receipt.total == 1399.0
+    assert fields["total"].value == 1399.0
+
+
+
+
+def test_kdv_negative_ocr_marker_is_treated_as_positive():
+    document = OCRDocument(
+        lines=[
+            OCRLine(
+                text="EYMEN ASAF NAK. AKARYAKIT",
+                confidence=0.99
+            ),
+            OCRLine(
+                text="KDV",
+                confidence=1.00
+            ),
+            OCRLine(
+                text="-718.29",
+                confidence=0.94
+            ),
+            OCRLine(
+                text="TOPLAM",
+                confidence=1.00
+            ),
+            OCRLine(
+                text="4.309,74",
+                confidence=0.99
+            ),
+        ]
+    )
+
+    receipt, fields = parse_receipt(
+        document
+    )
+
+    assert receipt.total == 4309.74
+    assert receipt.kdv == 718.29
+    assert fields["kdv"].value == 718.29

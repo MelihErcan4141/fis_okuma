@@ -59,6 +59,47 @@ class ValidationResult:
 
 
 class ReceiptValidator:
+    def _has_strong_kdv_context(
+        self,
+        ocr_texts,
+        source_text
+    ):
+        if not ocr_texts or not source_text:
+            return False
+
+        kdv_labels = {
+            "KDV",
+            "TOPKDV",
+            "TOP KDV",
+            "TOPLAM KDV",
+        }
+
+        source = str(source_text).strip()
+
+        for i, text in enumerate(ocr_texts):
+            normalized = str(text).upper().strip()
+
+            if normalized not in kdv_labels:
+                continue
+
+            # KDV tutarı etiketin hemen altında mı?
+            if (
+                i + 1 < len(ocr_texts)
+                and str(ocr_texts[i + 1]).strip()
+                == source
+            ):
+                return True
+
+            # Bazı fişlerde tutar hemen üstte olabilir.
+            if (
+                i > 0
+                and str(ocr_texts[i - 1]).strip()
+                == source
+            ):
+                return True
+
+        return False
+
     def _apply_cross_field_checks(self, fields):
         field_map = {
             field.field_name: field
@@ -176,13 +217,45 @@ class ReceiptValidator:
             )
 
         else:
-            fields.append(
-                self._validate_field(
-                    "KDV",
-                    regex_receipt.kdv,
-                    ai_receipt.kdv,
-                    parsed_fields["kdv"].confidence
+            kdv_validation = self._validate_field(
+                "KDV",
+                regex_receipt.kdv,
+                ai_receipt.kdv,
+                parsed_fields["kdv"].confidence
+            )
+
+            strong_kdv_context = (
+                regex_receipt.kdv is not None
+                and ai_receipt.kdv is None
+                and self._has_strong_kdv_context(
+                    ocr_texts,
+                    parsed_fields["kdv"].source_text
                 )
+            )
+
+            if (
+                strong_kdv_context
+                and regex_receipt.kdv > 0
+                and (
+                    regex_receipt.total is None
+                    or regex_receipt.kdv < regex_receipt.total
+                )
+            ):
+                kdv_validation.final_value = (
+                    regex_receipt.kdv
+                )
+
+                kdv_validation.status = (
+                    ValidationStatus.VERIFIED_WITH_OCR
+                )
+
+                kdv_validation.message = (
+                    "KDV tutarı açık KDV etiketinin "
+                    "hemen yanında bulundu."
+                )
+
+            fields.append(
+                kdv_validation
             )
 
         fields.append(

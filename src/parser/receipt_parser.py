@@ -413,9 +413,19 @@ def find_kdv(ocr_document, total_field):
         candidates = []
 
         # KDV kelimesinden önceki satır
+        # KDV kelimesinden önceki satır
         if i > 0:
             previous_line = lines[i - 1]
-            value = clean_amount(previous_line.text)
+
+            value = clean_amount(
+                previous_line.text
+            )
+
+            if (
+                value is not None
+                and value < 0
+            ):
+                value = abs(value)
 
             if value is not None:
                 candidates.append(
@@ -425,11 +435,20 @@ def find_kdv(ocr_document, total_field):
                         confidence=previous_line.confidence
                     )
                 )
-
+        # KDV kelimesinden sonraki satır
         # KDV kelimesinden sonraki satır
         if i + 1 < len(lines):
             next_line = lines[i + 1]
-            value = clean_amount(next_line.text)
+
+            value = clean_amount(
+                next_line.text
+            )
+
+            if (
+                value is not None
+                and value < 0
+            ):
+                value = abs(value)
 
             if value is not None:
                 candidates.append(
@@ -470,44 +489,66 @@ def find_total(ocr_document):
 
     total_keywords = {
         "TOPLAM",
+        "TOPLM",
+        "TOPLN",
         "GENEL TOPLAM",
+        "GENEL TOPLM",
         "ÖDENECEK",
+        "ODENECEK",
         "ÖDENECEK TUTAR",
+        "ODENECEK TUTAR",
         "TOP"
     }
 
+    # Önce en güçlü toplam etiketlerini ara.
     for i, line in enumerate(lines):
-        normalized_text = line.text.strip().upper()
+        normalized_text = (
+            line.text
+            .strip()
+            .upper()
+        )
 
-        if normalized_text in total_keywords:
+        if normalized_text not in total_keywords:
+            continue
 
-            # Önce TOPLAM kelimesinden sonraki satıra bak
-            if i + 1 < len(lines):
-                next_line = lines[i + 1]
-                value = clean_amount(next_line.text)
+        # 1) Etiketten sonraki satır en güçlü aday.
+        if i + 1 < len(lines):
+            next_line = lines[i + 1]
 
-                if value is not None:
-                    return ParsedField(
-                        value=value,
-                        source_text=next_line.text,
-                        confidence=next_line.confidence
-                    )
+            value = clean_amount(
+                next_line.text
+            )
 
-            # Sonraki satır sayı değilse önceki satıra bak
-            if i > 0:
-                previous_line = lines[i - 1]
-                value = clean_amount(previous_line.text)
+            if (
+                value is not None
+                and value > 0
+            ):
+                return ParsedField(
+                    value=value,
+                    source_text=next_line.text,
+                    confidence=next_line.confidence
+                )
 
-                if value is not None:
-                    return ParsedField(
-                        value=value,
-                        source_text=previous_line.text,
-                        confidence=previous_line.confidence
-                    )
+        # 2) Bazı fişlerde toplam tutarı etiketten
+        # hemen önce olabilir.
+        if i > 0:
+            previous_line = lines[i - 1]
+
+            value = clean_amount(
+                previous_line.text
+            )
+
+            if (
+                value is not None
+                and value > 0
+            ):
+                return ParsedField(
+                    value=value,
+                    source_text=previous_line.text,
+                    confidence=previous_line.confidence
+                )
 
     return ParsedField()
-
-
 def parse_receipt(ocr_document):
     company = find_company(ocr_document)
     receipt_no = find_receipt_no(ocr_document)

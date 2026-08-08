@@ -2,13 +2,8 @@ from ocr.reader import OCRReader
 
 
 IMAGE_PATHS = [
-    "images/real_batch/fis10.jpg",
-    "images/real_batch/fis12.jpg",
-    "images/real_batch/fis14.jpg",
-    "images/real_batch/fis20.jpg",
-    "images/real_batch/fis21.jpg",
+    "images/real_batch/fis18.jpeg",
 ]
-
 
 def main():
     reader = OCRReader()
@@ -32,8 +27,8 @@ def main():
             print("-" * 60)
 
             # KDV satırından önceki 5 ve sonraki 8 OCR satırını göster.
-            start = max(0, index - 5)
-            end = min(len(lines), index + 9)
+            start = max(0, index - 10)
+            end = min(len(lines), index + 12)
 
             for i in range(start, end):
                 current = lines[i]
