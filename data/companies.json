@@ -1,0 +1,59 @@
+{
+  "companies": [
+    {
+      "canonical_name": "A101 YENİ MAĞAZACILIK A.Ş.",
+      "aliases": [
+        "A101 YENI MAGAZACILIK AS",
+
+        "A101 YEN] MAGAZACILIK A.S.",
+
+        "A101 YEN] MAGAZACILIK A.S. M.Kodu:6848"
+      ]
+    },
+    {
+      "canonical_name": "BİM BİRLEŞİK MAĞAZALAR A.Ş.",
+      "aliases": [
+        "BIM BIRLESIK MAGAZALAR AS",
+
+        "BIM BIRLESIK MAGAZALAR A.S.",
+
+        "BUR BURLESIY MASAZALAR A.S"
+      ]
+    },
+    {
+      "canonical_name": "MİGROS TİCARET A.Ş.",
+      "aliases": [
+        "MIGROS TICARET AS"
+      ]
+    },
+    {
+      "canonical_name": "ŞOK MARKETLER",
+      "aliases": [
+        "SOK MARKETLER"
+      ]
+    },
+    {
+      "canonical_name": "MİGROS TİCARET A.Ş.",
+      "aliases": [
+        "MIGROS",
+        "MIGROS TICARET AS",
+        "PERLA VISTA BEYKENT MIGROS MAGAZASI",
+        "MIGROS TICARET PERLA VISTA BEYKENT MIGROS MAGAZASI AS"
+      ]
+    },
+    {
+      "canonical_name": "TEKPA CIVATA HIRDAVAT",
+      "aliases": [
+        "TEKPA CIVATA HIRDAVAT",
+        "CIVATA HIRDAVAT"
+      ]
+    },
+    {
+    "canonical_name": "KAS İTHALAT İHRACAT LİMİTED",
+    "aliases": [
+      "KAS ITHALAT IHRACAT LIMITED",
+      "KAS ITHALAT IHRACAT LÍMITED"
+    ]
+  }
+  ]
+}

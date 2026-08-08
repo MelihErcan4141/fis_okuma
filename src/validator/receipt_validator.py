@@ -3,6 +3,7 @@ import math
 import re
 
 from models.receipt import Receipt
+from services.company_normalizer import canonicalize_company
 
 
 MIN_HIGH_CONFIDENCE = 0.95
@@ -198,6 +199,9 @@ class ReceiptValidator:
             field.field_name: field.final_value
             for field in fields
         }
+        values["Firma"] = canonicalize_company(
+            values["Firma"]
+        )
 
         receipt = Receipt(
             company=values["Firma"],
@@ -230,6 +234,46 @@ class ReceiptValidator:
         )
 
         if invalid_reason:
+
+            # Firma regex sonucu kötü olabilir ama
+            # AI tarafında güvenilir bir firma adı bulunmuş olabilir.
+            if (
+                field_name == "Firma"
+                and ai_value is not None
+                and self._is_valid_company(ai_value)
+            ):
+                canonical_ai = canonicalize_company(
+                    ai_value
+                )
+
+                # Registry gerçekten bir canonical isim bulduysa
+                # AI sonucunu güvenli kabul et.
+                if canonical_ai != ai_value:
+                    return FieldValidation(
+                        field_name,
+                        regex_value,
+                        ai_value,
+                        canonical_ai,
+                        ValidationStatus.VERIFIED_WITH_AI,
+                        (
+                            "Regex firma sonucu geçersiz/genel bulundu, "
+                            "AI sonucu registry ile doğrulandı."
+                        )
+                    )
+
+                # Registry doğrulayamıyorsa kullanıcı kontrolüne bırak.
+                return FieldValidation(
+                    field_name,
+                    regex_value,
+                    ai_value,
+                    ai_value,
+                    ValidationStatus.NEEDS_REVIEW,
+                    (
+                        "Regex firma sonucu geçersiz/genel bulundu. "
+                        "AI geçerli görünüyor ancak registry ile doğrulanamadı."
+                    )
+                )
+
             return FieldValidation(
                 field_name,
                 regex_value,
@@ -349,14 +393,7 @@ class ReceiptValidator:
 
         regex_compare = regex_value
         ai_compare = ai_value
-        if field_name == "Firma":
-            regex_compare = self._normalize_company(
-                regex_value
-            )
-
-            ai_compare = self._normalize_company(
-                ai_value
-            )
+        
         if field_name == "Firma":
             regex_compare = self._normalize_company(regex_value)
             ai_compare = self._normalize_company(ai_value)
@@ -525,8 +562,13 @@ class ReceiptValidator:
     ):
         if value is None:
             return None
+        if field_name == "Firma":
+            if not self._is_valid_company(value):
+                return (
+                    f"Geçersiz veya fazla genel firma adı: {value}"
+                )
 
-        if field_name == "Tarih":
+        elif field_name == "Tarih":
             if not self._is_valid_date(value):
                 return (
                     f"Geçersiz tarih değeri: {value}"
@@ -626,6 +668,66 @@ class ReceiptValidator:
             return False
 
         return value >= 0
+    
+
+
+    def _is_valid_company(self, value):
+        if value is None:
+            return False
+
+        normalized = self._normalize_company(
+            value
+        )
+
+        if not normalized:
+            return False
+
+        words = normalized.split()
+
+        # Firma adı tamamen anlamsız veya çok kısa olmasın.
+        if len(normalized) < 3:
+            return False
+
+        generic_words = {
+            "TICARET",
+            "SANAYI",
+            "SAN",
+            "TIC",
+
+            # A.Ş. normalize edilince "A S" oluyor.
+            "A",
+            "S",
+            "AS",
+
+            "LTD",
+            "LIMITED",
+
+            # ŞTİ. normalize edilince "STI" olabilir.
+            "STI",
+            "SIRKETI",
+
+            "MAGAZA",
+            "MAGAZASI",
+
+            # Tek başına ayırt edici olmayan bağlaçlar
+            "VE",
+        }
+
+        meaningful_words = [
+            word
+            for word in words
+            if word not in generic_words
+        ]
+
+        # Örneğin:
+        # "TICARET A.S."
+        # "SAN TIC LTD"
+        # gibi isimler gerçek firma adı olarak
+        # yeterince ayırt edici değil.
+        if not meaningful_words:
+            return False
+
+        return True
 
     def _is_valid_receipt_no(self, value):
         text = str(value).strip()
@@ -654,41 +756,6 @@ class ReceiptValidator:
 
         return value
     
-    def _normalize_company(self, value):
-        if value is None:
-            return None
-
-        import re
-        import unicodedata
-
-        text = str(value).upper().strip()
-
-        # Türkçe / aksanlı karakterleri sadeleştir
-        text = unicodedata.normalize(
-            "NFKD",
-            text
-        )
-
-        text = "".join(
-            ch
-            for ch in text
-            if not unicodedata.combining(ch)
-        )
-
-        # Noktalama ve gereksiz boşlukları temizle
-        text = re.sub(
-            r"[^A-Z0-9 ]",
-            " ",
-            text
-        )
-
-        text = re.sub(
-            r"\s+",
-            " ",
-            text
-        ).strip()
-
-        return text
 
     def _normalize_date(self, value):
         if value is None:
@@ -704,6 +771,8 @@ class ReceiptValidator:
         if value is None:
             return None
 
+        import unicodedata
+
         text = str(value).upper().strip()
 
         replacements = {
@@ -713,13 +782,53 @@ class ReceiptValidator:
             "Ü": "U",
             "Ö": "O",
             "Ç": "C",
-            ".": "",
-            ",": "",
+
+            "Í": "I",
+            "Ì": "I",
+            "Î": "I",
+            "Ï": "I",
+
+            "Á": "A",
+            "À": "A",
+            "Â": "A",
+
+            "É": "E",
+            "È": "E",
+            "Ê": "E",
+
+            "Ó": "O",
+            "Ò": "O",
+            "Ô": "O",
+
+            "Ú": "U",
+            "Ù": "U",
+            "Û": "U",
         }
 
         for old, new in replacements.items():
             text = text.replace(old, new)
 
-        text = " ".join(text.split())
+        text = unicodedata.normalize(
+            "NFKD",
+            text
+        )
+
+        text = "".join(
+            ch
+            for ch in text
+            if not unicodedata.combining(ch)
+        )
+
+        text = re.sub(
+            r"[^A-Z0-9 ]",
+            " ",
+            text
+        )
+
+        text = re.sub(
+            r"\s+",
+            " ",
+            text
+        ).strip()
 
         return text

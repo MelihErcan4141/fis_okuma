@@ -667,3 +667,406 @@ def test_company_short_and_long_name_match():
             company_field.final_value
             == "MIGROS"
         )
+
+
+
+
+def test_a101_company_is_canonicalized():
+    regex_receipt = Receipt(
+        company="A101 YEN] MAGAZACILIK A.S. M.Kodu:6848",
+        receipt_no="0012",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.50,
+        total=250.00
+    )
+
+    ai_receipt = Receipt(
+        company="A101 YEN] MAGAZACILIK A.S.",
+        receipt_no="0012",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.50,
+        total=250.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "A101 YENİ MAĞAZACILIK A.Ş."
+    )
+
+
+def test_bim_ocr_error_is_canonicalized():
+    regex_receipt = Receipt(
+        company="BUR BURLESIY MASAZALAR A.S",
+        receipt_no="0012",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.50,
+        total=250.00
+    )
+
+    ai_receipt = Receipt(
+        company="BUR BURLESIY MASAZALAR A.S",
+        receipt_no="0012",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.50,
+        total=250.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "BİM BİRLEŞİK MAĞAZALAR A.Ş."
+    )
+
+
+
+def test_unknown_company_is_not_changed():
+    regex_receipt = Receipt(
+        company="XYZ TEKNOLOJI LTD",
+        receipt_no="0012",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.50,
+        total=250.00
+    )
+
+    ai_receipt = Receipt(
+        company="XYZ TEKNOLOJI LTD",
+        receipt_no="0012",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.50,
+        total=250.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "XYZ TEKNOLOJI LTD"
+    )
+
+
+def test_different_import_companies_are_not_merged():
+    regex_receipt = Receipt(
+        company="YABELES ITHALAT-IHRACAT LTD",
+        receipt_no="0269",
+        date="07-07-2026",
+        time="18:17",
+        kdv=12.85,
+        total=623.16
+    )
+
+    ai_receipt = Receipt(
+        company="YABELES ITHALAT-IHRACAT LTD",
+        receipt_no="0269",
+        date="07-07-2026",
+        time="18:17",
+        kdv=12.85,
+        total=623.16
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "YABELES ITHALAT-IHRACAT LTD"
+    )
+
+
+
+def test_company_accented_i_is_normalized():
+    regex_receipt = Receipt(
+        company="KAS ITHALAT IHRACAT LÍMITED",
+        receipt_no="00180",
+        date="23/07/2026",
+        time="19:03",
+        kdv=121.84,
+        total=869.99
+    )
+
+    ai_receipt = Receipt(
+        company="KAS ITHALAT IHRACAT LÍMITED",
+        receipt_no="00180",
+        date="23/07/2026",
+        time="19:03",
+        kdv=121.84,
+        total=869.99
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "KAS İTHALAT İHRACAT LİMİTED"
+    )
+
+
+def test_migros_short_name_is_canonicalized():
+    regex_receipt = Receipt(
+        company="MiGROS",
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=299.83,
+        total=1799.00
+    )
+
+    ai_receipt = Receipt(
+        company="MiGROS TICARET A.S. LIMAN AVM BANDIRMA SATIS MAGAZASI",
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=299.83,
+        total=1799.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "MİGROS TİCARET A.Ş."
+    )
+
+
+def test_generic_company_words_do_not_cause_false_match():
+    regex_receipt = Receipt(
+        company="ABC ITHALAT IHRACAT LIMITED",
+        receipt_no="123",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.00,
+        total=200.00
+    )
+
+    ai_receipt = Receipt(
+        company="ABC ITHALAT IHRACAT LIMITED",
+        receipt_no="123",
+        date="07-08-2026",
+        time="15:30",
+        kdv=20.00,
+        total=200.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "ABC ITHALAT IHRACAT LIMITED"
+    )
+
+
+def test_completely_different_company_is_not_canonicalized():
+    regex_receipt = Receipt(
+        company="MEHMET YILMAZ RESTORAN",
+        receipt_no="55",
+        date="07-08-2026",
+        time="15:30",
+        kdv=15.00,
+        total=150.00
+    )
+
+    ai_receipt = Receipt(
+        company="MEHMET YILMAZ RESTORAN",
+        receipt_no="55",
+        date="07-08-2026",
+        time="15:30",
+        kdv=15.00,
+        total=150.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    assert (
+        result.receipt.company
+        == "MEHMET YILMAZ RESTORAN"
+    )
+
+
+def test_generic_company_name_does_not_override_real_ai_company():
+    regex_receipt = Receipt(
+        company="TiCARET A.S.",
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=299.83,
+        total=1799.00
+    )
+
+    ai_receipt = Receipt(
+        company=(
+            "MiGROS TiCARET A.S. "
+            "LiMAN AVM BANDIRMA SATIS MAGAZASI"
+        ),
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=299.83,
+        total=1799.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    company_field = get_field(
+        result,
+        "Firma"
+    )
+
+    assert (
+        result.receipt.company
+        == "MİGROS TİCARET A.Ş."
+    )
+
+    assert (
+        company_field.status
+        == ValidationStatus.VERIFIED_WITH_AI
+    )
+
+
+
+def test_generic_regex_company_uses_registry_verified_ai():
+    regex_receipt = Receipt(
+        company="TiCARET A.S.",
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=299.83,
+        total=1799.00
+    )
+
+    ai_receipt = Receipt(
+        company="MiGROS TiCARET A.S. LiMAN AVM BANDIRMA SATIS MAGAZASI",
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=299.83,
+        total=1799.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    company_field = get_field(
+        result,
+        "Firma"
+    )
+
+    assert (
+        result.receipt.company
+        == "MİGROS TİCARET A.Ş."
+    )
+
+    assert (
+        company_field.status
+        == ValidationStatus.VERIFIED_WITH_AI
+    )
+
+
+def test_unknown_ai_company_requires_review_when_regex_is_generic():
+    regex_receipt = Receipt(
+        company="TiCARET A.S.",
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=20.00,
+        total=200.00
+    )
+
+    ai_receipt = Receipt(
+        company="HASAN YILMAZ GIDA LTD",
+        receipt_no="0041",
+        date="16/08/2024",
+        time="17:15",
+        kdv=20.00,
+        total=200.00
+    )
+
+    validator = ReceiptValidator()
+
+    result = validator.validate(
+        regex_receipt,
+        ai_receipt,
+        make_parsed_fields()
+    )
+
+    company_field = get_field(
+        result,
+        "Firma"
+    )
+
+    assert (
+        result.receipt.company
+        == "HASAN YILMAZ GIDA LTD"
+    )
+
+    assert (
+        company_field.status
+        == ValidationStatus.NEEDS_REVIEW
+    )
+
+    assert result.requires_review is True

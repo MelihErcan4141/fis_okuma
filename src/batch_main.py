@@ -1,8 +1,11 @@
 from services.batch_receipt_processor import BatchReceiptProcessor
-
+from services.excel_exporter import ExcelExporter
+import time 
+from datetime import datetime
 
 def main():
     folder_path = "images/real_batch"
+    start_time = time.perf_counter()
 
     processor = BatchReceiptProcessor()
 
@@ -40,6 +43,15 @@ def main():
         print("\n--- ALAN DURUMLARI ---")
 
         for field in result.fields:
+            display_final = field.final_value
+
+            if field.field_name == "Firma":
+
+                display_final = (
+
+                    result.receipt.company
+
+                )
             print(
                 f"{field.field_name:<12} "
                 f"{field.status.value:<20} "
@@ -135,6 +147,63 @@ def main():
             f"{field_name:<12}: "
             f"{stats['safe']}/{total} "
             f"(%{rate:.2f})"
+        )
+
+
+
+    exporter = ExcelExporter()
+    timestamp = datetime.now().strftime(
+        "%Y%m%d_%H%M%S"
+    )
+
+    output_path = (
+        f"output/receipts_{timestamp}.xlsx"
+    )
+
+    exporter.export(
+        results,
+        output_path
+    )
+
+    print(
+        f"\nExcel oluşturuldu: "
+        f"{output_path}"
+    )
+
+
+    end_time = time.perf_counter()
+
+    elapsed_seconds = (
+        end_time - start_time
+    )
+
+    minutes = int(
+        elapsed_seconds // 60
+    )
+
+    seconds = (
+        elapsed_seconds % 60
+    )
+
+    print(
+        "\n--- SÜRE ---"
+    )
+
+    print(
+        f"Toplam çalışma süresi : "
+        f"{minutes} dk "
+        f"{seconds:.2f} sn"
+    )
+
+    if total_count > 0:
+        average_time = (
+            elapsed_seconds
+            / total_count
+        )
+
+        print(
+            f"Fiş başına ortalama   : "
+            f"{average_time:.2f} sn"
         )
 
 

@@ -68,3 +68,55 @@ def test_unsupported_extension_raises_error(tmp_path):
 
     with pytest.raises(ValueError):
         preprocessor.prepare(str(source))
+
+
+
+def test_large_image_is_resized(tmp_path):
+    image_path = tmp_path / "large.jpg"
+
+    image = Image.new(
+        "RGB",
+        (3024, 4032),
+        "white"
+    )
+
+    image.save(image_path)
+
+    preprocessor = ImagePreprocessor()
+
+    result_path = preprocessor.prepare(
+        str(image_path)
+    )
+
+    with Image.open(result_path) as result:
+        width, height = result.size
+
+    assert max(width, height) == 2200
+
+    # Aspect ratio korunmalı.
+    assert width == 1650
+    assert height == 2200
+
+
+def test_small_image_is_not_upscaled(tmp_path):
+    image_path = tmp_path / "small.jpg"
+
+    image = Image.new(
+        "RGB",
+        (800, 1200),
+        "white"
+    )
+
+    image.save(image_path)
+
+    preprocessor = ImagePreprocessor()
+
+    result_path = preprocessor.prepare(
+        str(image_path)
+    )
+
+    with Image.open(result_path) as result:
+        width, height = result.size
+
+    assert width == 800
+    assert height == 1200
