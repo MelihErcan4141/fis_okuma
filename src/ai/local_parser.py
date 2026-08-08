@@ -36,6 +36,31 @@ Tahmin etme, yeni bilgi üretme ve firma adını düzeltmeye çalışma.
 
 1. company
 
+- company değeri OCR METNİNDE BULUNAN TEK BİR SATIR olmalıdır.
+
+- Birden fazla OCR satırını birleştirerek firma adı oluşturma.
+
+- Firma adını genişletme veya eksik gördüğün kısmı başka satırlardan tamamlama.
+
+- Örneğin OCR'da ayrı satırlar halinde:
+
+  MIGROS
+
+  TICARET PERLA VISTA
+
+  BEYKENT MIGROS MAGAZASI
+
+  bulunuyorsa company için sadece gerçek firma adı satırını kullan.
+
+  Satırları birleştirip yeni bir firma adı üretme.
+
+- OCR'da şirket adı "TEKPA" şeklinde tek satırsa,
+
+  company değerini daha uzun bir şirket adına dönüştürme.
+
+- "E-ARSIV FATURA", "MALI DEGERI YOK" gibi belge başlıklarını
+  company olarak kullanma.
+
 - Fişi düzenleyen işletmenin/firmanın adıdır.
 
 - Genellikle ilk satırlardadır.

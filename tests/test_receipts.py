@@ -106,3 +106,47 @@ def test_receipt_parser(lines, expected):
     assert parsed_fields["time"].confidence is not None
     assert parsed_fields["kdv"].confidence is not None
     assert parsed_fields["total"].confidence is not None
+
+
+def test_receipt_no_with_ocr_n0_variant():
+    document = OCRDocument(
+        lines=[
+            OCRLine(
+                text="FIS N0: 0298",
+                confidence=0.99
+            )
+        ]
+    )
+
+    receipt, fields = parse_receipt(document)
+
+    assert receipt.receipt_no == "0298"
+
+
+def test_address_no_is_not_receipt_no():
+    document = OCRDocument(
+        lines=[
+            OCRLine(
+                text="OVACIK MAH. NO:58",
+                confidence=0.99
+            )
+        ]
+    )
+
+    receipt, fields = parse_receipt(document)
+
+    assert receipt.receipt_no is None
+
+def test_long_receipt_number_is_not_truncated():
+    document = OCRDocument(
+        lines=[
+            OCRLine(
+               text="FIS NO: 05020011308301870047",
+               confidence=0.99
+            )
+        ]
+    )
+
+    receipt, fields = parse_receipt(document)
+
+    assert receipt.receipt_no is None

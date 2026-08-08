@@ -36,7 +36,8 @@ class ReceiptProcessor:
         validation_result = self.validator.validate(
             regex_receipt,
             ai_result,
-            parsed_fields
+            parsed_fields,
+            ocr_texts=ocr_document.texts
         )
 
         return validation_result
