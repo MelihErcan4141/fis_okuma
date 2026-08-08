@@ -69,7 +69,7 @@ def test_full_pipeline_receipt_2():
 
     final_receipt = validation_result.receipt
 
-    assert final_receipt.company == "KAS İTHALAT IHRACAT LÍMITED"
+    assert final_receipt.company == "KAS İTHALAT İHRACAT LİMİTED"
     assert final_receipt.receipt_no == "00180"
     assert final_receipt.date == "23/07/2026"
     assert final_receipt.time == "19:03"
